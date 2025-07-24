@@ -1,0 +1,40 @@
+[
+    {
+        "filename": "sanyo-vpcg250.jpg",
+        "hash": "4723c892d4d3c200074f3a8a437b0d3e62e631e140b68e2386a54c45f0da2566",
+        "objects": [
+            "person",
+            "boat",
+            "car"
+        ],
+        "category": "unknown"
+    },
+    {
+        "filename": "sanyo-vpcsx550.jpg",
+        "hash": "74401cc6e0b6bdb03b7d3a1c99a0ba3b4dd5b3ac9b7728a38f6fb3607f3360ea",
+        "objects": [
+            "apple",
+            "person",
+            "dining table",
+            "cup",
+            "carrot"
+        ],
+        "category": "unknown"
+    },
+    {
+        "filename": "sony-d700.jpg",
+        "hash": "8ff0028190b36a6c4af79989b248dd5e949d289d32c5f0e005be2db45d363c98",
+        "objects": [
+            "person"
+        ],
+        "category": "selfie"
+    },
+    {
+        "filename": "devon-janse-van-rensburg-yoqHLUayUTg-unsplash.jpg",
+        "hash": "da6ae5595576dde66342b6f4f08cf974dcd4dcb4e913986142dd1c70ee69107f",
+        "objects": [
+            "car"
+        ],
+        "category": "unknown"
+    }
+]
