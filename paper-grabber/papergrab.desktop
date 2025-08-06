@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PaperGrab
+Exec=/home/ani/project-sandbox/paper-grabber/launch.sh %u
+NoDisplay=true
+MimeType=x-scheme-handler/papergrab;
+

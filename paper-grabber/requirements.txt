@@ -1,42 +1,4 @@
-attrs==25.3.0
-beautifulsoup4==4.13.4
-certifi==2025.8.3
-charset-normalizer==3.4.2
-et_xmlfile==2.0.0
-h11==0.16.0
-idna==3.10
-openpyxl==3.1.5
-outcome==1.3.0.post0
-packaging==25.0
-PySocks==1.7.1
-python-dotenv==1.1.1
-requests==2.32.4
-selenium==4.34.2
-sniffio==1.3.1
-sortedcontainers==2.4.0
-soupsieve==2.7
-trio==0.30.0
-trio-websocket==0.12.2
-typing_extensions==4.14.1
-urllib3==2.5.0
-webdriver-manager==4.0.2
-websocket-client==1.8.0
-wsproto==1.2.0
+requests
+python-dotenv
+openpyxl
 
-# Core web scraping dependencies
-selenium>=4.15.0
-beautifulsoup4>=4.12.0
-webdriver-manager>=4.0.0
-
-# Excel file handling
-openpyxl>=3.1.0
-
-# HTTP and parsing utilities
-requests>=2.31.0
-urllib3>=2.0.0
-
-# Optional: For better HTML parsing
-lxml>=4.9.0
-
-# Optional: For advanced text processing
-python-dateutil>=2.8.0

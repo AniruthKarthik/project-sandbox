@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=PaperGrab
-# replace with the actual address
-Exec=/usr/bin/python3 /home/ani/project-sandbox/paper-grabber/main/papergrab.py %u
-Type=Application
-Terminal=true
-MimeType=x-scheme-handler/papergrab
-
