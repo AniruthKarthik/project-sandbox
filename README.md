@@ -11,6 +11,7 @@ Each project reflects a specific idea or technical curiosity, some of which were
 |-----------|------------------------------------------------------------------------------|---------|
 | [vidascii](./vidascii) | ASCII-based video playback attempt in terminal                         | Closed  |
 | [imgsearch](./imgsearch) | Prototype for content-based image search using basic CV techniques     | Closed  |
+| [paper-grabber](./paper-grabber) | Automated Scopus research paper metadata extractor     | Completed  |
 
 ---
 
