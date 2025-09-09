@@ -6,7 +6,7 @@
 
 This started as a fun coding project because I use Scopus for finding papers, but wanted something more personal for tracking my research workflow. While Scopus export is great for getting data out, I wanted to **track my research journey over time** - like seeing how papers I saved months ago are gaining citations, or building a timeline of when I discovered key papers in my field.
 
-This little tool I built saves papers from Scopus into an Excel file that becomes like my personal research diary. Every time I find an interesting paper, one click and it's logged with the date I found it, and I can run it again later to see updated citation counts.
+This tool helps you build a personal research library from Scopus, offering both a quick-save bookmarklet for individual papers and a powerful batch processing script for larger datasets.
 
 ## Why I Built This Alongside Regular Export
 
@@ -23,12 +23,17 @@ Basically, I wanted my personal research library to evolve with me over time, co
 
 ## What It Does
 
-* Saves papers from Scopus with one click using a bookmarklet
-* Keeps everything in one Excel file that builds up over time
-* Tracks when you saved each paper (helps see your research timeline)
-* Smart enough to not duplicate papers you've already saved
-* You can re-run it on old papers to update citation counts
-* Works on Linux, macOS, and Windows
+*   **Python Script (`papergrab.py`):**
+    *   Saves individual papers from Scopus with one click using a bookmarklet.
+    *   Keeps everything in one Excel file that builds up over time.
+    *   Tracks when you saved each paper (helps see your research timeline).
+    *   Smart enough to not duplicate papers you've already saved.
+    *   You can re-run it on old papers to update citation counts.
+    *   Works on Linux, macOS, and Windows.
+*   **JavaScript Batch PDF Downloader (`scopus-batch-script.js`):**
+    *   A Tampermonkey/Greasemonkey user script that automates batch PDF downloads directly from the Scopus website.
+    *   Interacts with the Scopus user interface to select a range of papers and initiate PDF downloads.
+    *   Ideal for quickly downloading multiple PDFs when browsing Scopus search results.
 
 ## Setup Instructions
 
@@ -70,20 +75,23 @@ mkdir -p ~/Documents/papers
 
 ```
 paper-grabber/
-├── papergrab.py         # Main script
-├── scopus_fetcher.py    # API logic
-├── excel_writer.py      # Excel saving
-├── launch.sh            # Browser protocol handler
+├── papergrab.py         # Main Python script for individual paper saving
+├── scopus_fetcher.py    # Python API logic for Scopus data
+├── excel_writer.py      # Python script for Excel saving
+├── scopus-batch-script.js # JavaScript for batch processing Scopus EIDs
+├── launch.sh            # Browser protocol handler for Python script
 ├── .env                 # API key (you create this)
 ├── requirements.txt
 └── README.md
 ```
 
-## Setting Up the Bookmarklet (Linux/macOS)
+## Using the Python Script (`papergrab.py`)
+
+### Setting Up the Bookmarklet (Linux/macOS)
 
 This part is a bit technical but worth it - you'll be able to save papers with literally one click.
 
-### Register Protocol Handler
+#### Register Protocol Handler
 
 ```bash
 cd ~/paper-grabber
@@ -104,34 +112,69 @@ update-desktop-database ~/.local/share/applications/
 xdg-mime default papergrab.desktop x-scheme-handler/papergrab
 ```
 
-### Install Bookmarklet
+#### Install Bookmarklet
 
 Create a browser bookmark with this code as the URL:
 
 ```javascript
-javascript:(function(){try{const url=window.location.href;if(!url.includes('scopus.com')){alert('❌ This bookmarklet only works on Scopus.com pages.');return;}let eid=null;let match=url.match(/[?&]eid=([^&]+)/);if(match){eid=decodeURIComponent(match[1]);}if(!eid){match=url.match(/\/publications\/(\d{8,})/);if(match){eid='2-s2.0-'+match[1];}}if(!eid){match=url.match(/display\.uri.*?eid=([^&]+)/);if(match){eid=decodeURIComponent(match[1]);}}if(!eid){alert('❌ Could not extract EID. Use only on individual paper pages.');return;}if(!eid.startsWith('2-s2.0-')){eid='2-s2.0-'+eid;}const fullUrl=`https://www.scopus.com/record/display.uri?eid=${eid}`;window.location.href='papergrab:'+encodeURIComponent(fullUrl);}catch(e){alert('❌ Error: '+e.message);}})();
+javascript:(function(){try{const url=window.location.href;if(!url.includes('scopus.com')){alert('❌ This bookmarklet only works on Scopus.com pages.');return;}let eid=null;let match=url.match(/[?&]eid=([^&]+)/);if(match){eid=decodeURIComponent(match[1]);}if(!eid){match=url.match(///publications///(\\d{8,})/);if(match){eid='2-s2.0-'+match[1];}}if(!eid){match=url.match(/display.uri.*?eid=([^&]+)/);if(match){eid=decodeURIComponent(match[1]);}}if(!eid){alert('❌ Could not extract EID. Use only on individual paper pages.');return;}if(!eid.startsWith('2-s2.0-')){eid='2-s2.0-'+eid;}const fullUrl=`https://www.scopus.com/record/display.uri?eid=${eid}`;window.location.href='papergrab:'+encodeURIComponent(fullUrl);}catch(e){alert('❌ Error: '+e.message);}})();
 ```
 
-### Test It
+#### Test It
 
 Go to any paper page on Scopus and click your bookmarklet. The script should launch and save the paper!
 
-## Manual Usage (Works on All OS)
+### Manual Usage (Works on All OS)
 
 If the bookmarklet setup doesn't work for you, you can always run it manually:
 
-### Interactive Mode
+#### Interactive Mode
 
 ```bash
 source env/bin/activate
 python papergrab.py
 ```
 
-### Direct URL
+#### Direct URL
 
 ```bash
 python papergrab.py "https://www.scopus.com/record/display.uri?eid=2-s2.0-85123456789"
 ```
+
+## Using the JavaScript Batch PDF Downloader (`scopus-batch-script.js`)
+
+This script is a Tampermonkey/Greasemonkey user script that automates the process of downloading multiple PDFs directly from Scopus search results pages. It interacts with the Scopus website's interface to select and download papers in batches.
+
+### Prerequisites
+
+You need a browser extension like [Tampermonkey](https://www.tampermonkey.net/) (Chrome, Edge, Safari, Firefox, Opera) or [Greasemonkey](https://www.greasespot.net/) (Firefox) installed in your web browser.
+
+### How to Use
+
+1.  **Install the script:**
+    *   Open the `scopus-batch-script.js` file in a text editor.
+    *   Copy the entire content of the file.
+    *   Open your Tampermonkey/Greasemonkey dashboard in your browser.
+    *   Create a new user script and paste the copied content into the editor. Save the script.
+    *   Alternatively, you can often directly install user scripts by navigating to the `.js` file in your browser if you have the extension installed.
+
+2.  **Navigate to Scopus:** Go to any search results page on Scopus (e.g., after performing a search).
+
+3.  **Start the download:**
+    *   Once on a Scopus search results page, you should see a control panel appear on the right side of the screen (usually near the top right).
+    *   Click the "Start Batch Download" button within this panel.
+    *   The script will then automatically interact with the Scopus page to select papers, open the download dialog, fill in the "From" and "To" ranges, and click the necessary download buttons.
+
+4.  **Manual PDF Saving:**
+    *   **Important:** Your browser's default PDF viewer or download settings will determine how the PDFs are handled. For each PDF, a "Save As" dialog might appear, or the PDF might automatically download to your default downloads folder.
+    *   The script will pause between batches to allow you time to manually save the PDFs if prompted by your browser. It will log messages in the browser's console (F12 to open developer tools) to guide you.
+
+### Script Behavior
+
+*   The script processes papers in batches (default: 40 papers per batch).
+*   It simulates clicks and input entries to navigate the Scopus download workflow.
+*   It provides logging in the browser console to show its progress and any issues.
+*   You can stop the automation at any time using the "Stop" button in the control panel or by pressing `Ctrl+Shift+D` (Windows/Linux) or `Cmd+Shift+D` (macOS).
 
 ## What Gets Saved
 
