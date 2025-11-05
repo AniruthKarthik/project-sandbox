@@ -1,0 +1,9 @@
+.jar 
+.zip 
+.dolt
+
+# Do not add compiled files to git
+leaderboard_cli
+*.o
+*.class
+mysql-connector-j-8.0.33/
