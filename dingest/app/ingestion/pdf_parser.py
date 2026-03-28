@@ -16,15 +16,15 @@ class PDFParser(BaseParser):
 
     def parse(self, file_path: Path) -> ParsedDocument:
         try:
-            doc = fitz.open(str(file_path))
-            text_content = [page.get_text().strip() for page in doc]
+            with fitz.open(str(file_path)) as doc:
+                text_content = [page.get_text().strip() for page in doc]
 
-            return ParsedDocument(
-                file_name=file_path.name,
-                format=self.supported_format,
-                page_count=len(doc),
-                text_content=text_content,
-                metadata=dict(doc.metadata),
-            )
+                return ParsedDocument(
+                    file_name=file_path.name,
+                    format=self.supported_format,
+                    page_count=len(doc),
+                    text_content=text_content,
+                    metadata=dict(doc.metadata),
+                )
         except Exception as e:
             raise ParseFailureError(file_path.name, str(e))
