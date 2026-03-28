@@ -1,0 +1,243 @@
+from abc import ABC, abstractmethod
+from pathlib import Path
+from app.models.document import FileFormat, ParsedDocument
+
+
+class BaseParser(ABC):
+
+    @property
+    @abstractmethod
+    def supported_format(self) -> FileFormat:
+        pass
+
+    @property
+    @abstractmethod
+    def supported_extensions(self) -> set[str]:
+        pass
+
+    @abstractmethod
+    def parse(self, file_path: Path) -> ParsedDocument:
+        pass
+
+    def can_handle(self, extension: str) -> bool:
+        return extension.lower().lstrip(".") in self.supported_extensions
+import pandas as pd
+from pathlib import Path
+from app.ingestion.base import BaseParser
+from app.models.document import FileFormat, ParsedDocument
+from app.core.exceptions import ParseFailureError
+
+
+class CSVParser(BaseParser):
+    @property
+    def supported_format(self) -> FileFormat:
+        return FileFormat.CSV
+
+    @property
+    def supported_extensions(self) -> set[str]:
+        return {"csv"}
+
+    def parse(self, file_path: Path) -> ParsedDocument:
+        try:
+            df = pd.read_csv(file_path)
+            data = df.to_dict(orient="records")
+
+            return ParsedDocument(
+                file_name=file_path.name,
+                format=self.supported_format,
+                page_count=1,
+                sheets={"default": data},
+                metadata={"columns": list(df.columns), "rows": len(df)},
+            )
+
+        except Exception as e:
+            raise ParseFailureError(file_path.name, str(e))
+            pass
+import pandas as pd
+from pathlib import Path
+from app.ingestion.base import BaseParser
+from app.models.document import FileFormat, ParsedDocument
+from app.core.exceptions import ParseFailureError
+
+
+class ExcelParser(BaseParser):
+    @property
+    def supported_format(self) -> FileFormat:
+        return FileFormat.EXCEL
+
+    @property
+    def supported_extensions(self) -> set[str]:
+        return {"xls", "xlsx"}
+
+    def parse(self, file_path: Path) -> ParsedDocument:
+        try:
+            xlFile = pd.ExcelFile(file_path)
+            sheetsData = {}
+
+            for sheet in xlFile.sheet_names:
+                df = pd.read_excel(file_path, sheet_name=sheet)
+                sheetsData[sheet] = df.to_dict(orient="records")
+
+            return ParsedDocument(
+                file_name=file_path.name,
+                format=self.supported_format,
+                page_count=len(xlFile.sheet_names),
+                sheets=sheetsData,
+                metadata={"sheet_names": xlFile.sheet_names},
+            )
+        except Exception as e:
+            raise ParseFailureError(file_path.name, str(e))
+import fitz
+from pathlib import Path
+from app.ingestion.base import BaseParser
+from app.models.document import FileFormat, ParsedDocument
+from app.core.exceptions import ParseFailureError
+
+
+class PDFParser(BaseParser):
+    @property
+    def supported_format(self) -> FileFormat:
+        return FileFormat.PDF
+
+    @property
+    def supported_extensions(self) -> set[str]:
+        return {"pdf"}
+
+    def parse(self, file_path: Path) -> ParsedDocument:
+        try:
+            doc = fitz.open(str(file_path))
+            text_content = [page.get_text().strip() for page in doc]
+
+            return ParsedDocument(
+                file_name=file_path.name,
+                format=self.supported_format,
+                page_count=len(doc),
+                text_content=text_content,
+                metadata=dict(doc.metadata),
+            )
+        except Exception as e:
+            raise ParseFailureError(file_path.name, str(e))
+from pptx import Presentation
+from pathlib import Path
+from app.ingestion.base import BaseParser
+from app.models.document import FileFormat, ParsedDocument
+from app.core.exceptions import ParseFailureError
+
+
+class PPTParser(BaseParser):
+    @property
+    def supported_format(self) -> FileFormat:
+        return FileFormat.PPT
+
+    @property
+    def supported_extensions(self) -> set[str]:
+        return {"pptx"}
+
+    def parse(self, file_path: Path) -> ParsedDocument:
+        try:
+            prs = Presentation(file_path)
+            slideTexts = []
+
+            for slide in prs.slide:
+                textRuns = []
+                for shape in slide.shape:
+                    if hasattr(shape, "text"):
+                        textRuns.append(shape.text)
+                slideTexts.append("\n.join(textRuns)")
+
+            return ParsedDocument(
+                file_name=file_path.name,
+                format=self.supported_format,
+                page_count=len(prs.slides),
+                text_content=slideTexts,
+                metadata={"slide_count": len(prs.slides)},
+            )
+
+        except Exception as e:
+            raise ParseFailureError(file_path.name, str(e))
+from docx import Document
+from pathlib import Path
+from app.ingestion.base import BaseParser
+from app.models.document import ParsedDocument, FileFormat
+from app.core.exceptions import ParseFailureError
+
+
+class WordParser(BaseParser):
+    @property
+    def supported_format(self) -> FileFormat:
+        return FileFormat.WORD
+
+    @property
+    def supported_extensions(self) -> set[str]:
+        return {"docx"}
+
+    def parse(self, file_path: Path) -> ParsedDocument:
+        try:
+            doc = Document(file_path)
+            parags = [p.text for p in doc.paragraphs if p.text.strip()]
+
+            return ParsedDocument(
+                file_name=file_path.name,
+                format=self.supported_format,
+                page_count=None,
+                text_content=parags,
+                metadata={"paragraph_count": len(parags)},
+            )
+
+        except Exception as e:
+            raise ParseFailureError(file_path.name, str(e))
+class BaseError(Exception):
+    pass
+
+
+class UnsupportedFormatError(BaseError):
+    def __init__(self, extension: str):
+        super().__init__(f"No parser registered for file ext: '{extension}'")
+        self.extension = extension
+
+
+class ParseFailureError(BaseError):
+    def __init__(self, file_name: str, reason: str):
+        super.__init__(f"Failed to parse '{file_name}': {reason}")
+        self.file_name = file_name
+        self.reason = reason
+
+
+class FileTooLargeError(BaseError):
+    def __init__(self, file_name: str, sizeMB: float, limitMB: float):
+        def __init__(self, file_name: str, sizeMB: float, limitMB: float):
+            super.__init__(
+                f"File '{file_name}' is {sizeMB:.1f} MB,"
+                f"exceeds limit of {limitMB} MB"
+            )
+            self.file_name = file_name
+            self.sizeMB = sizeMB
+            self.limitMB = limitMB
+from enum import Enum
+from typing import Any
+from pydantic import BaseModel, Field
+
+
+class FileFormat(str, Enum):
+    EXCEL = "excel"
+    CSV = "csv"
+    PDF = "pdf"
+    WORD = "word"
+    PPT = "ppt"
+    UNKNOWN = "unknown"
+
+
+class ParsedDocument(BaseModel):
+    file_name: str
+    format: FileFormat
+    page_count: int | None = Field(
+        default=None, desciption="Slides,pages,or sheets count"
+    )
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    sheets: dict[str, list[dict[str, Any]]] | None = None
+    text_content: list[str] | None = Field(
+        default=None, desciption="List of text blocks - parasm, pgs or Slides"
+    )
+
+    class Config:
+        usesEnumValues = True

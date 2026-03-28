@@ -16,7 +16,7 @@ class BaseParser(ABC):
         pass
 
     @abstractmethod
-    def parse(self, filePath: Path) -> ParsedDocument:
+    def parse(self, file_path: Path) -> ParsedDocument:
         pass
 
     def can_handle(self, extension: str) -> bool:

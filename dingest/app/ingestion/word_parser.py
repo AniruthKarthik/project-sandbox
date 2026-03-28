@@ -14,18 +14,18 @@ class WordParser(BaseParser):
     def supported_extensions(self) -> set[str]:
         return {"docx"}
 
-    def parse(self, filePath: Path) -> ParsedDocument:
+    def parse(self, file_path: Path) -> ParsedDocument:
         try:
-            doc = Document(filePath)
-            parags = [p.text for p in doc.paragrphs if p.text.strip()]
+            doc = Document(file_path)
+            parags = [p.text for p in doc.paragraphs if p.text.strip()]
 
             return ParsedDocument(
-                fileName=filePath.name,
+                file_name=file_path.name,
                 format=self.supported_format,
-                pageCount=None,
-                textContent=parags,
-                metadata={"paragraph_count)": len(parags)},
+                page_count=None,
+                text_content=parags,
+                metadata={"paragraph_count": len(parags)},
             )
 
         except Exception as e:
-            raise ParseFailureError(filePath.name, str(e))
+            raise ParseFailureError(file_path.name, str(e))

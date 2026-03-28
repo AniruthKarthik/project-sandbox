@@ -14,19 +14,19 @@ class CSVParser(BaseParser):
     def supported_extensions(self) -> set[str]:
         return {"csv"}
 
-    def parse(self, filePath: Path) -> ParsedDocument:
+    def parse(self, file_path: Path) -> ParsedDocument:
         try:
-            df = pd.read_csv(filePath)
+            df = pd.read_csv(file_path)
             data = df.to_dict(orient="records")
 
             return ParsedDocument(
-                fileName=filePath.name,
+                file_name=file_path.name,
                 format=self.supported_format,
-                pageCount=1,
+                page_count=1,
                 sheets={"default": data},
                 metadata={"columns": list(df.columns), "rows": len(df)},
             )
 
         except Exception as e:
-            raise ParseFailureError(filePath.name, str(e))
+            raise ParseFailureError(file_path.name, str(e))
             pass

@@ -14,21 +14,21 @@ class ExcelParser(BaseParser):
     def supported_extensions(self) -> set[str]:
         return {"xls", "xlsx"}
 
-    def parse(self, filePath: Path) -> ParsedDocument:
+    def parse(self, file_path: Path) -> ParsedDocument:
         try:
-            xlFile = pd.ExcelFile(filePath)
+            xlFile = pd.ExcelFile(file_path)
             sheetsData = {}
 
             for sheet in xlFile.sheet_names:
-                df = pd.read_excel(filePath, sheet_name=sheet)
+                df = pd.read_excel(file_path, sheet_name=sheet)
                 sheetsData[sheet] = df.to_dict(orient="records")
 
             return ParsedDocument(
-                fileName=filePath.name,
+                file_name=file_path.name,
                 format=self.supported_format,
-                pageCount=len(xlFile.sheet_names),
+                page_count=len(xlFile.sheet_names),
                 sheets=sheetsData,
                 metadata={"sheet_names": xlFile.sheet_names},
             )
         except Exception as e:
-            raise ParseFailureError(filePath.name, str(e))
+            raise ParseFailureError(file_path.name, str(e))

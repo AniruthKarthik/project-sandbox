@@ -14,9 +14,9 @@ class PPTParser(BaseParser):
     def supported_extensions(self) -> set[str]:
         return {"pptx"}
 
-    def parse(self, filePath: Path) -> ParsedDocument:
+    def parse(self, file_path: Path) -> ParsedDocument:
         try:
-            prs = Presentation(filePath)
+            prs = Presentation(file_path)
             slideTexts = []
 
             for slide in prs.slide:
@@ -27,12 +27,12 @@ class PPTParser(BaseParser):
                 slideTexts.append("\n.join(textRuns)")
 
             return ParsedDocument(
-                fileName=filePath.name,
+                file_name=file_path.name,
                 format=self.supported_format,
-                pageCount=len(prs.slides),
-                textContent=slideTexts,
+                page_count=len(prs.slides),
+                text_content=slideTexts,
                 metadata={"slide_count": len(prs.slides)},
             )
 
         except Exception as e:
-            raise ParseFailureError(filePath.name, str(e))
+            raise ParseFailureError(file_path.name, str(e))

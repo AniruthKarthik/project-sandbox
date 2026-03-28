@@ -14,17 +14,17 @@ class PDFParser(BaseParser):
     def supported_extensions(self) -> set[str]:
         return {"pdf"}
 
-    def parse(self, filePath: Path) -> ParsedDocument:
+    def parse(self, file_path: Path) -> ParsedDocument:
         try:
-            doc = fitz.open(str(filePath))
-            textContext = [page.get_text().strip() for page in doc]
+            doc = fitz.open(str(file_path))
+            text_content = [page.get_text().strip() for page in doc]
 
             return ParsedDocument(
-                fileName=filePath.name,
+                file_name=file_path.name,
                 format=self.supported_format,
-                pageCount=len(doc),
-                textContext=textContext,
+                page_count=len(doc),
+                text_content=text_content,
                 metadata=dict(doc.metadata),
             )
         except Exception as e:
-            raise ParseFailureError(filePath.name, str(e))
+            raise ParseFailureError(file_path.name, str(e))

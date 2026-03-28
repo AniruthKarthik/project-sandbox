@@ -13,14 +13,14 @@ class FileFormat(str, Enum):
 
 
 class ParsedDocument(BaseModel):
-    fileName: str
+    file_name: str
     format: FileFormat
-    pageCount: int | None = Field(
+    page_count: int | None = Field(
         default=None, desciption="Slides,pages,or sheets count"
     )
     metadata: dict[str, Any] = Field(default_factory=dict)
     sheets: dict[str, list[dict[str, Any]]] | None = None
-    textContent: list[str] | None = Field(
+    text_content: list[str] | None = Field(
         default=None, desciption="List of text blocks - parasm, pgs or Slides"
     )
 

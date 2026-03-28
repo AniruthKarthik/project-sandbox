@@ -9,19 +9,17 @@ class UnsupportedFormatError(BaseError):
 
 
 class ParseFailureError(BaseError):
-    def __init__(self, fileName: str, reason: str):
-        super.__init__(f"Failed to parse '{fileName}': {reason}")
-        self.fileName = fileName
+    def __init__(self, file_name: str, reason: str):
+        super().__init__(f"Failed to parse '{file_name}': {reason}")
+        self.file_name = file_name
         self.reason = reason
 
 
 class FileTooLargeError(BaseError):
-    def __init__(self, fileName: str, sizeMB: float, limitMB: float):
-        def __init__(self, fileName: str, sizeMB: float, limitMB: float):
-            super.__init__(
-                f"File '{fileName}' is {sizeMB:.1f} MB,"
-                f"exceeds limit of {limitMB} MB"
-            )
-            self.fileName = fileName
-            self.sizeMB = sizeMB
-            self.limitMB = limitMB
+    def __init__(self, file_name: str, sizeMB: float, limitMB: float):
+        super().__init__(
+            f"File '{file_name}' is {sizeMB:.1f} MB, " f"exceeds limit of {limitMB} MB"
+        )
+        self.file_name = file_name
+        self.sizeMB = sizeMB
+        self.limitMB = limitMB
