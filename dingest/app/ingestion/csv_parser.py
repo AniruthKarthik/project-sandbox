@@ -17,14 +17,15 @@ class CSVParser(BaseParser):
     def parse(self, file_path: Path) -> ParsedDocument:
         try:
             df = pd.read_csv(file_path)
+            sheet_key = file_path.stem
             data = df.to_dict(orient="records")
 
             return ParsedDocument(
                 file_name=file_path.name,
                 format=self.supported_format,
                 page_count=1,
-                sheets={"default": data},
-                metadata={"columns": list(df.columns), "rows": len(df)},
+                sheets={sheet_key: data},
+                metadata={"columns": list(df.columns), "row_count": len(df)},
             )
 
         except Exception as e:

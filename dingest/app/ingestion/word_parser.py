@@ -18,13 +18,16 @@ class WordParser(BaseParser):
         try:
             doc = Document(file_path)
             parags = [p.text for p in doc.paragraphs if p.text.strip()]
+            headings = [
+                {"text": p.text} for p in doc.paragraphs if "Heading" in p.style.name
+            ]
 
             return ParsedDocument(
                 file_name=file_path.name,
                 format=self.supported_format,
                 page_count=None,
                 text_content=parags,
-                metadata={"paragraph_count": len(parags)},
+                metadata={"paragraph_count": len(parags), "headings": headings},
             )
 
         except Exception as e:
