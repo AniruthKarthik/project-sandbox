@@ -16,19 +16,19 @@ class ExcelParser(BaseParser):
 
     def parse(self, file_path: Path) -> ParsedDocument:
         try:
-            xlFile = pd.ExcelFile(file_path)
-            sheetsData = {}
+            xl_file = pd.ExcelFile(file_path)
+            sheets_data = {}
 
-            for sheet in xlFile.sheet_names:
+            for sheet in xl_file.sheet_names:
                 df = pd.read_excel(file_path, sheet_name=sheet)
-                sheetsData[sheet] = df.to_dict(orient="records")
+                sheets_data[sheet] = df.to_dict(orient="records")
 
             return ParsedDocument(
                 file_name=file_path.name,
                 format=self.supported_format,
-                page_count=len(xlFile.sheet_names),
-                sheets=sheetsData,
-                metadata={"sheet_names": xlFile.sheet_names},
+                page_count=len(xl_file.sheet_names),
+                sheets=sheets_data,
+                metadata={"sheet_names": xl_file.sheet_names},
             )
         except Exception as e:
             raise ParseFailureError(file_path.name, str(e))

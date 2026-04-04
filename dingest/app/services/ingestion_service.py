@@ -39,4 +39,4 @@ class IngestionService:
                 f"Ingestion failed (unexpected) | file={file_path.name}", exc_info=True
             )
 
-            raise ParseFailureError(file_path, str(exc)) from exc
+            raise ParseFailureError(file_path.name, str(exc)) from exc
