@@ -24,7 +24,7 @@ def get_ingestion_service() -> IngestionService:
 )
 async def upload_and_parse(
     file: UploadFile = File(...),
-    service: IngestionService = Depends(get_ingestion_service()),
+    service: IngestionService = Depends(get_ingestion_service),
 ) -> ParsedDocument:
     content = await file.read()
     validate_upload(file, content)

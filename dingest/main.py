@@ -27,8 +27,8 @@ async def unsupported_format_handler(request: Request, exc: UnsupportedFormatErr
     return JSONResponse(
         status_code=415,
         content=ErrorResponse(
-            error="UnsupportedFormar",
-            details=str(exc),
+            error="UnsupportedFormat",
+            detail=str(exc),
         ).model_dump(),
     )
 
@@ -39,7 +39,7 @@ async def parse_failure_handler(request: Request, exc: ParseFailureError):
         status_code=422,
         content=ErrorResponse(
             error="ParseFailure",
-            details=str(exc),
+            detail=str(exc),
         ).model_dump(),
     )
 
@@ -50,7 +50,7 @@ async def file_too_large_handler(request: Request, exc: FileTooLargeError):
         status_code=413,
         content=ErrorResponse(
             error="FileTooLarge",
-            details=str(exc),
+            detail=str(exc),
         ).model_dump(),
     )
 
