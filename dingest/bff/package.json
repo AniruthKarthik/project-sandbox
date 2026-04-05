@@ -14,8 +14,9 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "form-data": "^4.0.0",
-    "multer": "^1.4.5-lts.1",
-    "morgan": "^1.10.0"
+    "glob": "^13.0.6",
+    "morgan": "^1.10.0",
+    "multer": "^2.1.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
