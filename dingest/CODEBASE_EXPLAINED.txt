@@ -1,0 +1,149 @@
+# Dingest Codebase Explanation
+
+This document provides a comprehensive top-to-bottom explanation of the Dingest repository.
+
+## 1. High-Level Architecture
+
+Dingest is a multi-tier application designed for document ingestion and parsing. It consists of three main components:
+
+- **Client**: A React (TypeScript) frontend built with Vite.
+- **BFF (Backend for Frontend)**: A Node.js/Express server that acts as a secure proxy and file handler.
+- **Ingest Service**: A Python/FastAPI service that performs the actual document parsing using specialized libraries.
+
+### The Flow:
+Client (React) -> BFF (Express) -> Ingest Service (FastAPI)
+
+---
+
+## 2. Component Breakdown
+
+### A. Client (`/client`)
+- **Framework**: React 18, Vite, TypeScript.
+- **Key Responsibilities**:
+  - Provide a drag-and-drop interface for file uploads.
+  - Display parsed results (Tables for Excel/CSV, Text for PDF/Word, Slides for PPT).
+- **Core Files**:
+  - `src/App.tsx`: The main entry point managing the upload state (idle, uploading, success, error).
+  - `src/hooks/useUpload.ts`: Custom hook that wraps the API call and manages state transitions.
+  - `src/services/api.ts`: Contains the `fetch` logic to call the BFF.
+  - `src/components/`: specialized viewers (`TableViewer`, `TextViewer`, `SlideViewer`) for different document formats.
+
+### B. BFF (`/bff`)
+- **Framework**: Node.js, Express.
+- **Key Responsibilities**:
+  - Receive file uploads via `multipart/form-data` using `multer`.
+  - Proxy these files to the internal Python Ingest service.
+  - Handle errors and provide a unified API for the frontend.
+- **Core Files**:
+  - `src/server.js` & `src/app.js`: Application setup and middleware (CORS, logging, error handling).
+  - `src/routes/ingest.js`: Defines the `/api/ingest/upload` endpoint.
+  - `src/services/pythonProxy.js`: Uses `axios` and `form-data` to forward the file buffer to FastAPI.
+
+### C. Ingest Service (`/ingest`)
+- **Framework**: Python 3, FastAPI.
+- **Key Responsibilities**:
+  - Accept file uploads and save them to temporary storage.
+  - Identify the file type and select the appropriate parser.
+  - Extract text, tables, or slides.
+- **Core Files**:
+  - `main.py`: FastAPI entry point with exception handlers.
+  - `app/api/routes/ingest.py`: Endpoint `/ingest/upload` that orchestrates the parsing process.
+  - `app/services/ingestion_service.py`: Business logic that coordinates between the API and the Parser Factory.
+  - `app/ingestion/factory.py`: Implements the **Factory Pattern** to return the correct parser based on file extension.
+  - `app/ingestion/base.py`: Abstract base class that all parsers must implement.
+  - `app/models/document.py`: Pydantic models defining the structured output (`ParsedDocument`).
+
+---
+
+## 3. Detailed Execution Flow (Example: Uploading a PDF)
+
+1. **Frontend**: The user drops a `report.pdf` into `DropZone`.
+2. **Frontend**: `useUpload` calls `uploadFile(file)` in `api.ts`.
+3. **Frontend**: A `POST` request is sent to `http://localhost:3000/api/ingest/upload` with the file in a `FormData` object.
+4. **BFF**: Express receives the request. `multer` middleware extracts the file and puts it in `req.file.buffer`.
+5. **BFF**: `ingest.js` route calls `forwardFileToPython(buffer, name, mimetype)`.
+6. **BFF**: `pythonProxy.js` creates a new `FormData`, appends the buffer, and sends a `POST` to `http://localhost:8000/ingest/upload`.
+7. **Ingest Service**: FastAPI receives the file. `upload_and_parse` in `ingest.py` reads the bytes.
+8. **Ingest Service**: The file is saved to a `NamedTemporaryFile`.
+9. **Ingest Service**: `IngestionService.ingest(path)` is called.
+10. **Ingest Service**: `ParserFactory.get_parser(path)` returns a `PDFParser` instance.
+11. **Ingest Service**: `PDFParser.parse(path)` uses `PyMuPDF` (fitz) to extract text from each page.
+12. **Ingest Service**: A `ParsedDocument` object is returned, serialized to JSON, and sent back through the chain.
+13. **Frontend**: The `success` state is triggered, and `ResultPanel` renders the `TextViewer` because the format is `pdf`.
+
+---
+
+## 4. Code Examples
+
+### How an API call is made (Frontend)
+```typescript
+// client/src/services/api.ts
+export const uploadFile = async (file: File): Promise<ParsedDocument> => {
+  const form = new FormData();
+  form.append("file", file);
+
+  const res = await fetch("/api/ingest/upload", {
+    method: "POST",
+    body: form,
+  });
+  return await res.json();
+};
+```
+
+### How the Factory Pattern works (Python)
+```python
+# ingest/app/ingestion/factory.py
+class ParserFactory:
+    _PARSERS = [PPTParser(), ExcelParser(), WordParser(), CSVParser(), PDFParser()]
+
+    @classmethod
+    def get_parser(cls, file_path: Path) -> BaseParser:
+        extension = file_path.suffix.lstrip(".").lower()
+        for parser in cls._PARSERS:
+            if parser.can_handle(extension):
+                return parser
+        raise UnsupportedFormatError(extension)
+```
+
+### Adding a New Parser (Abstract Base Class)
+```python
+# ingest/app/ingestion/base.py
+class BaseParser(ABC):
+    @abstractmethod
+    def parse(self, file_path: Path) -> ParsedDocument:
+        pass
+```
+
+---
+
+## 5. How to Add New Features
+
+### Case 1: Adding a new file format (e.g., Markdown)
+1. **Ingest**: Create `ingest/app/ingestion/markdown_parser.py` inheriting from `BaseParser`.
+2. **Ingest**: Implement `parse()` logic to extract text.
+3. **Ingest**: Register the new parser in `ParserFactory._PARSERS` in `factory.py`.
+4. **Ingest**: Update `FileFormat` enum in `app/models/document.py`.
+5. **Client**: Update `ResultPanel.tsx` to include a case for `markdown` in the `renderViewer` switch.
+6. **Client**: Create a `MarkdownViewer` component if needed.
+
+### Case 2: Adding a new Metadata field
+1. **Ingest**: Add the field to the `ParsedDocument` model in `app/models/document.py`.
+2. **Ingest**: Update the relevant parsers to populate this field during `parse()`.
+3. **Client**: Update `src/types/document.ts` to include the new field.
+4. **Client**: Update components to display the new information.
+
+### Case 3: Adding a new BFF endpoint
+1. **BFF**: Add a new route file in `src/routes/` or add a method to `ingest.js`.
+2. **BFF**: Register the route in `src/app.js`.
+3. **Client**: Add a corresponding method in `src/services/api.ts`.
+
+---
+
+## 6. Environment & Setup
+
+- **BFF**: Needs `PORT` (default 3000) and `FASTAPI_URL` (default http://localhost:8000).
+- **Ingest**: Needs Python 3.10+ and requirements from `requirements.txt`.
+- **Client**: Needs Node.js for Vite, runs on default port 5173 (proxied via Vite config if needed, or BFF serves it).
+
+---
+*End of Document*

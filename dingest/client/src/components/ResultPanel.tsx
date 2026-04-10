@@ -16,6 +16,12 @@ const FORMAT_LABEL: Record<string, string> = {
   ppt: "PowerPoint",
 };
 
+const formatFileSize=(bytes:number)=>{
+    if(bytes<1024) return `${bytes}B`;
+    if (bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)}KB`;
+    return `${(bytes/(1024 * 1024)).toFixed(1)}MB`;
+};
+
 export const ResultPanel = ({ doc, onReset }: ResultPanelProps) => {
   const renderViewer = () => {
     switch (doc.format) {
@@ -47,6 +53,9 @@ export const ResultPanel = ({ doc, onReset }: ResultPanelProps) => {
         <div className="result-panel__meta">
           <span className="badge">{FORMAT_LABEL[doc.format] ?? doc.format}</span>
           <span className="filename">{doc.file_name}</span>
+          <span className="file-size">
+          {formatFileSize(doc.file_size_bytes)}
+          </span>
           {doc.page_count != null && (
             <span className="page-count">{doc.page_count} {doc.format === "excel" ? "sheet(s)" : doc.format === "ppt" ? "slide(s)" : "page(s)"}</span>
           )}

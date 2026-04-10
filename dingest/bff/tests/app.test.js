@@ -51,6 +51,7 @@ describe("GET /api/ingest/formats", () => {
 describe("POST /api/ingest/upload", () => {
   const mockParsedDoc = {
     file_name: "test.pdf",
+    file_size_bytes: 1234,
     format: "pdf",
     page_count: 1,
     text_content: ["Hello from test"],
@@ -71,6 +72,7 @@ describe("POST /api/ingest/upload", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.format).toBe("pdf");
+    expect(res.body.file_size_bytes).toBe(1234);
     expect(res.body.file_name).toBe("test.pdf");
     expect(pythonProxy.forwardFileToPython).toHaveBeenCalledTimes(1);
   });

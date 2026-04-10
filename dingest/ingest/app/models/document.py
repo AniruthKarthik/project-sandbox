@@ -16,6 +16,7 @@ class ParsedDocument(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     file_name: str
+    file_size_bytes: int | None = None
     format: FileFormat
     page_count: int | None = Field(default=None)
     metadata: dict[str, Any] = Field(default_factory=dict)

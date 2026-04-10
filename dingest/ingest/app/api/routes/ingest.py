@@ -37,6 +37,7 @@ async def upload_and_parse(
     try:
         result = service.ingest(tmp_path)
         result.file_name = file.filename
+        result.file_size_bytes = len(content)
         return result
     finally:
         tmp_path.unlink(missing_ok=True)

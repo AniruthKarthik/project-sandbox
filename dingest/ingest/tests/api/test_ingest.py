@@ -60,6 +60,7 @@ def test_upload_pdf(pdf_bytes):
     assert response.status_code == 200
     data = response.json()
     assert data["format"] == "pdf"
+    assert data["file_size_bytes"] == len(pdf_bytes)
     assert data["file_name"] == "test.pdf"
     assert data["page_count"] == 1
     assert isinstance(data["text_content"], list)
@@ -78,6 +79,7 @@ def test_upload_excel(excel_bytes):
     )
     assert response.status_code == 200
     data = response.json()
+    assert data["file_size_bytes"] == len(excel_bytes)
     assert data["format"] == "excel"
     assert "Sheet1" in data["sheets"]
     assert data["sheets"]["Sheet1"][0]["product"] == "Widget"
@@ -90,6 +92,7 @@ def test_upload_csv(csv_bytes):
     )
     assert response.status_code == 200
     data = response.json()
+    assert data["file_size_bytes"] == len(csv_bytes)
     assert data["format"] == "csv"
     sheets = data["sheets"]
     assert len(sheets) == 1
