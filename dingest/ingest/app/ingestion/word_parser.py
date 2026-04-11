@@ -22,12 +22,21 @@ class WordParser(BaseParser):
                 {"text": p.text} for p in doc.paragraphs if "Heading" in p.style.name
             ]
 
+            props = doc.core_properties
             return ParsedDocument(
                 file_name=file_path.name,
                 format=self.supported_format,
                 page_count=None,
                 text_content=parags,
-                metadata={"paragraph_count": len(parags), "headings": headings},
+                title=props.title or None,
+                author=props.author or None,
+                subject=props.subject or None,
+                keywords=props.keywords or None,
+                creator=props.author or None,
+                producer=None,
+                creation_date=str(props.created) if props.created else None,
+                mod_date=str(props.modified) if props.modified else None,
+                metadata={"revision": props.revision, "paragraph_count": len(parags)},
             )
 
         except Exception as e:

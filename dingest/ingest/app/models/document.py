@@ -24,6 +24,17 @@ class ParsedDocument(BaseModel):
     sheets: dict[str, list[dict[str, Any]]] | None = None
     text_content: list[str] | None = Field(default=None)
 
+    title: str | None = None
+    author: str | None = None
+    subject: str | None = None
+    keywords: str | None = None
+    creator: str | None = None
+    producer: str | None = None
+    creation_date: str | None = None
+    mod_date: str | None = None
+    trapped: str | None = None
+    encryption: str | None = None
+
     @property
     def slides(self) -> list[dict[str, Any]]:
         # Pull the structured slide data from metadata

@@ -38,14 +38,18 @@ body {
 
 /* ── App Layout ─────────────────────────────────────────── */
 .app {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 64px 24px;
+  padding: 32px 24px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .app__header {
-  margin-bottom: 64px;
+  margin-bottom: 32px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .app__title {
@@ -165,34 +169,43 @@ body {
 
 /* ── Result Panel (The Grid) ─────────────────────────────── */
 .result-panel {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
 .result-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 24px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .result-container {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 32px;
-  align-items: start;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: stretch;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .result-container {
     grid-template-columns: 1fr;
+    height: auto;
   }
+  .app { height: auto; }
 }
 
 .result-main {
-  min-width: 0; /* Prevent flex overflow */
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 12px;
 }
 
 /* ── Details Sidebar ─────────────────────────────────────── */
@@ -201,8 +214,8 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 24px;
-  position: sticky;
-  top: 24px;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .sidebar-section {

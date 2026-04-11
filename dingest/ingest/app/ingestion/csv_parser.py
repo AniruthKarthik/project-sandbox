@@ -25,6 +25,16 @@ class CSVParser(BaseParser):
                 format=self.supported_format,
                 page_count=1,
                 sheets={sheet_key: data},
+                title=None,
+                author=None,
+                subject=None,
+                keywords=None,
+                creator=None,
+                producer="Dingest CSV parser",
+                creation_date=None,
+                mod_date=None,
+                trapped=None,
+                encryption=None,
                 metadata={"columns": list(df.columns), "row_count": len(df)},
             )
 

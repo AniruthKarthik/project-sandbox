@@ -32,14 +32,28 @@ class PPTParser(BaseParser):
                     {"slide_number": i, "title": title, "content": full_text}
                 )
 
+            props = prs.core_properties
             return ParsedDocument(
                 file_name=file_path.name,
                 format=self.supported_format,
                 page_count=len(prs.slides),
                 text_content=flat_texts,
+                title=props.title or None,
+                author=props.author or None,
+                subject=props.subject or None,
+                keywords=props.keywords or None,
+                creator=props.author or None,
+                producer=None,
+                creation_date=str(props.created) if props.created else None,
+                mod_date=str(props.modified) if props.modified else None,
+                trapped=None,
+                encryption=None,
                 metadata={
                     "slide_count": len(prs.slides),
-                    "structured_slides": structured_slides,
+                    "last_printed": (
+                        str(props.last_printed) if props.last_printed else None
+                    ),
+                    "revision": props.revision,
                 },
             )
         except Exception as e:

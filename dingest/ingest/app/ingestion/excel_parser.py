@@ -16,19 +16,34 @@ class ExcelParser(BaseParser):
 
     def parse(self, file_path: Path) -> ParsedDocument:
         try:
-            xl_file = pd.ExcelFile(file_path)
-            sheets_data = {}
+            xl = pd.ExcelFile(file_path, engine="openpyxl")
+            wb = xl.book
 
-            for sheet in xl_file.sheet_names:
-                df = pd.read_excel(file_path, sheet_name=sheet)
+            sheets_data = {}
+            for sheet in xl.sheet_names:
+                df = xl.parse(sheet)
                 sheets_data[sheet] = df.to_dict(orient="records")
+
+            props = wb.properties
 
             return ParsedDocument(
                 file_name=file_path.name,
                 format=self.supported_format,
-                page_count=len(xl_file.sheet_names),
+                page_count=len(xl.sheet_names),
                 sheets=sheets_data,
-                metadata={"sheet_names": xl_file.sheet_names},
+                metadata={
+                    "sheet_names": xl.sheet_names,
+                },
+                title=props.title or None,
+                author=props.creator or None,
+                subject=props.subject or None,
+                keywords=props.keywords or None,
+                creator=props.creator or None,
+                producer=None,
+                creation_date=str(props.created) if props.created else None,
+                mod_date=str(props.modified) if props.modified else None,
+                encryption=None,
             )
+
         except Exception as e:
             raise ParseFailureError(file_path.name, str(e))
