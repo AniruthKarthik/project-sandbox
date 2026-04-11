@@ -1,3 +1,4 @@
+import hashlib
 import shutil
 import tempfile
 from pathlib import Path
@@ -38,6 +39,8 @@ async def upload_and_parse(
         result = service.ingest(tmp_path)
         result.file_name = file.filename
         result.file_size_bytes = len(content)
+        result.file_hash = hashlib.shake_256(content).hexdigest(16)
+
         return result
     finally:
         tmp_path.unlink(missing_ok=True)

@@ -18,6 +18,7 @@ class ParsedDocument(BaseModel):
     file_name: str
     file_size_bytes: int | None = None
     format: FileFormat
+    file_hash: str | None = None
     page_count: int | None = Field(default=None)
     metadata: dict[str, Any] = Field(default_factory=dict)
     sheets: dict[str, list[dict[str, Any]]] | None = None

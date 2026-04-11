@@ -3,6 +3,7 @@ export type FileFormat = "excel" | "csv" | "pdf" | "word" | "ppt" | "unknown";
 export interface ParsedDocument {
   file_name: string;
   file_size_bytes:number;
+  file_hash:string;
   format: FileFormat;
   page_count: number | null;
   metadata: Record<string, unknown>;
