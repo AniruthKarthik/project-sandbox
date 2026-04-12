@@ -43,4 +43,29 @@ const getPythonHealth = async () => {
   return response.data;
 };
 
-module.exports = { forwardFileToPython, getSupportedFormats, getPythonHealth };
+const exportDocument = async (editedDoc) => {
+  try {
+    const response = await fastApiClient.post("/ingest/export", editedDoc, {
+      responseType: "arraybuffer", // Important for binary data
+    });
+    return {
+      data: response.data,
+      headers: response.headers,
+    };
+  } catch (err) {
+    if (err.response) {
+      const error = new Error("FastAPI export error");
+      error.status = err.response.status;
+      error.body = err.response.data;
+      throw error;
+    }
+    throw new Error(`Could not reach Python service for export.`);
+  }
+};
+
+module.exports = { 
+  forwardFileToPython, 
+  getSupportedFormats, 
+  getPythonHealth,
+  exportDocument
+};

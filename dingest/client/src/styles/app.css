@@ -380,3 +380,53 @@ tr:hover td {
   color: var(--text-muted);
   line-height: 1.6;
 }
+
+.edit-input,.edit-textarea {
+  width:100%;
+  background: var(--bg);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 8px 12 px;
+  font-family: inherit ;
+  font-size: inherit;
+  transition: border-color 0.2s ;
+
+}
+
+.edit-input:focus,.edit-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.edit-textarea {
+  resize: vertical;
+  display: block;
+}
+
+.detail-item__input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border-muted);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+.detail-item__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.btn--download {
+  background: rgba(232, 255, 71, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(232, 255, 71, 0.2);
+}
+
+.btn--download:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}

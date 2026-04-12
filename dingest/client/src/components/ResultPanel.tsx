@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import type { ParsedDocument } from "../types/document";
 import { TableViewer } from "./TableViewer";
 import { TextViewer } from "./TextViewer";
@@ -25,7 +26,6 @@ const formatFileSize = (bytes: number) => {
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return null;
 
-  // Handle PDF format: D:20260318130351Z
   if (dateStr.startsWith("D:")) {
     try {
       const year = dateStr.slice(2, 6);
@@ -47,7 +47,6 @@ const formatDate = (dateStr: string | null) => {
     }
   }
 
-  // Handle ISO or standard date strings
   const date = new Date(dateStr);
   if (!isNaN(date.getTime())) {
     return date.toLocaleDateString(undefined, { 
@@ -62,31 +61,143 @@ const formatDate = (dateStr: string | null) => {
   return dateStr;
 };
 
-const Value = ({ val, isDate = false }: { val: any; isDate?: boolean }) => (
-  <span className="detail-item__value">
-    {val ? (isDate ? formatDate(String(val)) : String(val)) : <em style={{ opacity: 0.4 }}>Not specified</em>}
-  </span>
-);
+const Value = ({ 
+  val, 
+  isEditing = false, 
+  isDate = false,
+  onChange 
+}: { 
+  val: any; 
+  isEditing?: boolean; 
+  isDate?: boolean;
+  onChange?: (val: string) => void 
+}) => {
+  if (isEditing && onChange) {
+    return (
+      <input 
+        className="detail-item__input" 
+        value={val || ""} 
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Not specified"
+      />
+    );
+  }
+  return (
+    <span className="detail-item__value">
+      {val ? (isDate ? formatDate(String(val)) : String(val)) : <em style={{ opacity: 0.4 }}>Not specified</em>}
+    </span>
+  );
+};
 
 export const ResultPanel = ({ doc, onReset }: ResultPanelProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedDoc, setEditedDoc] = useState(doc);
+  const [hasSaved, setHasSaved] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  useEffect(() => {
+    setEditedDoc(doc);
+    setHasSaved(false);
+  }, [doc]);
+
+  const handleSave = () => {
+    console.log("Saving changes:", editedDoc);
+    setIsEditing(false);
+    setHasSaved(true);
+  };
+
+  const handleCancel = () => {
+    setEditedDoc(doc);
+    setIsEditing(false);
+  };
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch("/api/ingest/export", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editedDoc),
+      });
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = editedDoc.file_name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download error:", err);
+      alert("Failed to reconstruct and download the file.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const updateMetadata = (key: keyof ParsedDocument, value: string) => {
+    setEditedDoc(prev => ({ ...prev, [key]: value }));
+  };
+
   const renderViewer = () => {
-    switch (doc.format) {
+    switch (editedDoc.format) {
       case "excel":
       case "csv":
-        return doc.sheets ? <TableViewer sheets={doc.sheets} /> : null;
-
-      case "pdf":
-        return doc.text_content ? (
-          <TextViewer blocks={doc.text_content} label="Page" />
+        return editedDoc.sheets ? (
+          <TableViewer
+            sheets={editedDoc.sheets}
+            isEditing={isEditing}
+            onCellChange={(sheet, i, col, val) => {
+              const newSheets = { ...editedDoc.sheets! };
+              const newRows = [...newSheets[sheet]];
+              newRows[i] = { ...newRows[i], [col]: val };
+              newSheets[sheet] = newRows;
+              setEditedDoc({ ...editedDoc, sheets: newSheets });
+            }}
+          />
         ) : null;
 
+      case "pdf":
       case "word":
-        return doc.text_content ? (
-          <TextViewer blocks={doc.text_content} label="Paragraph" />
+        return editedDoc.text_content ? (
+          <TextViewer
+            blocks={editedDoc.text_content}
+            label={editedDoc.format === "pdf" ? "Page" : "Paragraph"}
+            isEditing={isEditing}
+            onBlockChange={(idx, val) => {
+              const newBlocks = [...editedDoc.text_content!];
+              newBlocks[idx] = val;
+              setEditedDoc({
+                ...editedDoc,
+                text_content: newBlocks,
+              });
+            }}
+          />
         ) : null;
 
       case "ppt":
-        return doc.slides ? <SlideViewer slides={doc.slides} /> : null;
+        return editedDoc.slides ? (
+          <SlideViewer
+            slides={editedDoc.slides}
+            isEditing={isEditing}
+            onSlideChange={(i, field, val) => {
+              const newSlides = [...editedDoc.slides!];
+              newSlides[i] = { ...newSlides[i], [field]: val };
+              setEditedDoc({
+                ...editedDoc,
+                slides: newSlides,
+              });
+            }}
+          />
+        ) : null;
 
       default:
         return <p>No viewer available for this format.</p>;
@@ -99,109 +210,122 @@ export const ResultPanel = ({ doc, onReset }: ResultPanelProps) => {
         <button className="btn btn--ghost" onClick={onReset}>
           <span>←</span> Back to Upload
         </button>
-        <div className="badge">{FORMAT_LABEL[doc.format] ?? doc.format}</div>
+
+        <div className="result-panel__actions">
+          {hasSaved && !isEditing && (
+            <button 
+              className="btn btn--download" 
+              onClick={handleDownload}
+              disabled={isDownloading}
+            >
+              <span>⬇</span> {isDownloading ? "Generating..." : "Download Edited Document"}
+            </button>
+          )}
+          
+          {isEditing ? (
+            <>
+              <button className="btn btn--primary" onClick={handleSave}>
+                Save Changes
+              </button>
+              <button className="btn btn--ghost" onClick={handleCancel}>
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button className="btn btn--ghost" onClick={() => setIsEditing(true)}>
+              Edit Document
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="result-container">
         <main className="result-main">{renderViewer()}</main>
 
         <aside className="details-sidebar">
-          {/* Section: Standard Properties */}
           <section className="sidebar-section">
             <h3 className="sidebar-section__title">Document Properties</h3>
             <div className="detail-item">
               <span className="detail-item__label">Title</span>
-              <Value val={doc.title} />
+              <Value 
+                val={editedDoc.title} 
+                isEditing={isEditing} 
+                onChange={(v) => updateMetadata("title", v)} 
+              />
             </div>
             <div className="detail-item">
               <span className="detail-item__label">Author</span>
-              <Value val={doc.author} />
+              <Value 
+                val={editedDoc.author} 
+                isEditing={isEditing} 
+                onChange={(v) => updateMetadata("author", v)} 
+              />
             </div>
             <div className="detail-item">
               <span className="detail-item__label">Subject</span>
-              <Value val={doc.subject} />
+              <Value 
+                val={editedDoc.subject} 
+                isEditing={isEditing} 
+                onChange={(v) => updateMetadata("subject", v)} 
+              />
             </div>
             <div className="detail-item">
               <span className="detail-item__label">Keywords</span>
-              <Value val={doc.keywords} />
+              <Value 
+                val={editedDoc.keywords} 
+                isEditing={isEditing} 
+                onChange={(v) => updateMetadata("keywords", v)} 
+              />
             </div>
           </section>
 
-          {/* Section: System Metadata */}
           <section className="sidebar-section">
             <h3 className="sidebar-section__title">System Metadata</h3>
             <div className="detail-item">
               <span className="detail-item__label">Creator</span>
-              <Value val={doc.creator} />
+              <Value 
+                val={editedDoc.creator} 
+                isEditing={isEditing} 
+                onChange={(v) => updateMetadata("creator", v)} 
+              />
             </div>
             <div className="detail-item">
               <span className="detail-item__label">Producer</span>
-              <Value val={doc.producer} />
+              <Value 
+                val={editedDoc.producer} 
+                isEditing={isEditing} 
+                onChange={(v) => updateMetadata("producer", v)} 
+              />
             </div>
             <div className="detail-item">
               <span className="detail-item__label">Created</span>
-              <Value val={doc.creation_date} isDate />
+              <Value val={editedDoc.creation_date} isDate />
             </div>
             <div className="detail-item">
               <span className="detail-item__label">Modified</span>
-              <Value val={doc.mod_date} isDate />
-            </div>
-            <div className="detail-item">
-              <span className="detail-item__label">Trapped</span>
-              <Value val={doc.trapped} />
-            </div>
-            <div className="detail-item">
-              <span className="detail-item__label">Encryption</span>
-              <Value val={doc.encryption} />
+              <Value val={editedDoc.mod_date} isDate />
             </div>
           </section>
 
-          {/* Section: File Overview */}
           <section className="sidebar-section">
             <h3 className="sidebar-section__title">File Overview</h3>
             <div className="detail-item">
               <span className="detail-item__label">Filename</span>
-              <span className="detail-item__value">{doc.file_name}</span>
+              <span className="detail-item__value">{editedDoc.file_name}</span>
             </div>
             <div className="detail-item">
               <span className="detail-item__label">Size</span>
               <span className="detail-item__value">
-                {formatFileSize(doc.file_size_bytes)}
+                {formatFileSize(editedDoc.file_size_bytes)}
               </span>
             </div>
             <div className="detail-item">
-              <span className="detail-item__label">Hash (shake_256)</span>
-              <span className="detail-item__value">{doc.file_hash}</span>
+              <span className="detail-item__label">Format</span>
+              <span className="detail-item__value--accent">
+                {FORMAT_LABEL[doc.format] ?? doc.format}
+              </span>
             </div>
           </section>
-
-          {/* Section: Any Extra Metadata */}
-          {Object.keys(doc.metadata).length > 0 && (
-            <section className="sidebar-section">
-              <h3 className="sidebar-section__title">Technical Details</h3>
-              {Object.entries(doc.metadata).map(([key, value]) => {
-                // Filter out keys already shown as top-level fields
-                const excludedKeys = [
-                  "title", "author", "subject", "keywords", "creator", 
-                  "producer", "creationDate", "modDate", "trapped", 
-                  "encryption", "creation_date", "mod_date"
-                ];
-                
-                if (excludedKeys.includes(key)) return null;
-                if (typeof value === "object" && value !== null) return null;
-                if (value === "" || value === null || value === undefined) return null;
-
-                return (
-                  <div key={key} className="detail-item">
-                    <span className="detail-item__label">
-                      {key.replace(/([A-Z])/g, " $1").replace(/_/g, " ")}
-                    </span>
-                    <span className="detail-item__value">{String(value)}</span>
-                  </div>
-                );
-              })}
-            </section>
-          )}
         </aside>
       </div>
     </div>
