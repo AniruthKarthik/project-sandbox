@@ -14,6 +14,7 @@ Each project reflects a specific idea or technical curiosity, some of which were
 | [paper-grabber](./paper-grabber) | Automated Scopus research paper metadata extractor     | Completed  |
 | [dolt-tree](./dolt-tree/) |  Dolt Database based Leaderboard     | Completed  |
 | [log-noise-filter](./log-noise-filter/) |  Log noise Filter / Analyzer (FP)     | Completed  |
+| [dingest](./dingest) |  Data Ingestion pipeline implementaion with minimal features     | Completed  |
 
 ---
 
