@@ -3,15 +3,18 @@ package storage
 import (
 	"encoding/json"
 	"os"
+	"time"
 )
 
 type State struct {
-	LastEventID map[string]string `json:"last_event_id"`
+	LastEventID        map[string]string `json:"last_event_id"`
+	LastSelfCommitTime time.Time         `json:"last_self_commit_time"`
 }
 
 func NewState() *State {
 	return &State{
-		LastEventID: make(map[string]string),
+		LastEventID:        make(map[string]string),
+		LastSelfCommitTime: time.Time{},
 	}
 }
 

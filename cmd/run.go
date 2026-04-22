@@ -90,6 +90,21 @@ func runCycle(p *poller.Poller, state *storage.State) {
 	// 3. scoring
 	scores := engine.Score(newEvents)
 
+	// Calculate "After Me" stats
+	report := engine.AnalyzeAfterMe(data, selfUser, state.LastSelfCommitTime)
+	fmt.Println("\n--- COMMIT STATUS ---")
+	fmt.Println(engine.GetMessage(report))
+	fmt.Println("---------------------\n")
+
+	// Update self last commit time from fetched data (more robust than newEvents)
+	if selfEvents, ok := data[selfUser]; ok {
+		for _, e := range selfEvents {
+			if e.Type == "PushEvent" && e.CreatedAt.After(state.LastSelfCommitTime) {
+				state.LastSelfCommitTime = e.CreatedAt
+			}
+		}
+	}
+
 	// 4. pressure
 	result := engine.ComputePressure(scores, selfUser)
 
