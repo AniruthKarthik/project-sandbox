@@ -15,6 +15,7 @@ Each project reflects a specific idea or technical curiosity, some of which were
 | [dolt-tree](./dolt-tree/) |  Dolt Database based Leaderboard     | Completed  |
 | [log-noise-filter](./log-noise-filter/) |  Log noise Filter / Analyzer (FP)     | Completed  |
 | [dingest](./dingest) |  Data Ingestion pipeline implementaion with minimal features     | Completed  |
+| [p2pressure](./p2pressure) |  Github Commit Monitor| Completed  |
 
 ---
 
