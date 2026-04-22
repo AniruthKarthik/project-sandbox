@@ -1,0 +1,54 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build cache
+/bin/
+/dist/
+
+# Go workspace
+go.work
+go.work.sum
+
+# Dependency directories (rare in Go, but safe)
+vendor/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files
+.env
+
+# Coverage
+coverage.out
+coverage.html
+
+# SQLite (if used later)
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
+
+# Generated files
+*.gen.go
+
+# CLI artifacts
+p2pressure
