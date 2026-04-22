@@ -10,12 +10,14 @@ var rootCmnd = &cobra.Command{
 	Short: "github activity notifier",
 }
 
+var watch bool
+
 var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Start monitoring loop",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("starting p2pressure")
-		start()
+		start(watch)
 
 	},
 }
@@ -26,4 +28,5 @@ func Execute() error {
 
 func init() {
 	rootCmnd.AddCommand(runCmd)
+	runCmd.Flags().BoolVarP(&watch, "watch", "w", false, "Run continuously in a loop")
 }
